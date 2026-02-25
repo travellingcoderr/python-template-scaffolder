@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import hashlib
+import json
 import re
 from pathlib import Path
 
@@ -48,13 +50,30 @@ def parse_vars(values: list[str]) -> dict[str, str]:
     return parsed
 
 
+def file_sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def write_manifest(destination: Path, template_name: str, files: dict[str, str]) -> None:
+    scaffold_dir = destination / ".scaffold"
+    scaffold_dir.mkdir(parents=True, exist_ok=True)
+    manifest_path = scaffold_dir / "manifest.json"
+    manifest = {
+        "manifest_version": 1,
+        "template": template_name,
+        "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
+        "files": files,
+    }
+    manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
 def scaffold_project(
     templates_dir: Path,
     template_name: str,
     destination: Path,
     context: dict[str, str],
     overwrite: bool = False,
-) -> None:
+) -> dict[str, str]:
     template_root = templates_dir / template_name
     if not template_root.exists() or not template_root.is_dir():
         available = sorted(p.name for p in templates_dir.iterdir() if p.is_dir())
@@ -63,6 +82,8 @@ def scaffold_project(
         )
 
     destination.mkdir(parents=True, exist_ok=True)
+    generated_files: dict[str, str] = {}
+
     for source in template_root.rglob("*"):
         if source.name == ".DS_Store":
             continue
@@ -85,6 +106,59 @@ def scaffold_project(
         text = source.read_text(encoding="utf-8")
         rendered = render_text(text, context)
         target.write_text(rendered, encoding="utf-8")
+        rel = target.relative_to(destination).as_posix()
+        generated_files[rel] = file_sha256(target)
+
+    return generated_files
+
+
+def run_status(project_path: Path) -> None:
+    manifest_path = project_path / ".scaffold" / "manifest.json"
+    if not manifest_path.exists():
+        raise FileNotFoundError(f"Manifest not found: {manifest_path}")
+
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    files: dict[str, str] = manifest.get("files", {})
+
+    generated: list[str] = []
+    modified: list[str] = []
+    deleted: list[str] = []
+
+    for rel, expected_hash in sorted(files.items()):
+        path = project_path / rel
+        if not path.exists():
+            deleted.append(rel)
+            continue
+        if file_sha256(path) == expected_hash:
+            generated.append(rel)
+        else:
+            modified.append(rel)
+
+    ignored = {".scaffold/manifest.json"}
+    generated_set = set(files.keys())
+    custom: list[str] = []
+    for path in sorted(p for p in project_path.rglob("*") if p.is_file()):
+        rel = path.relative_to(project_path).as_posix()
+        if rel in ignored or rel in generated_set:
+            continue
+        custom.append(rel)
+
+    print(f"Template: {manifest.get('template', 'unknown')}")
+    print(f"Generated (unchanged): {len(generated)}")
+    print(f"Modified generated: {len(modified)}")
+    print(f"Deleted generated: {len(deleted)}")
+    print(f"Custom files: {len(custom)}")
+
+    def print_section(title: str, items: list[str]) -> None:
+        if not items:
+            return
+        print(f"\n{title}:")
+        for item in items:
+            print(f"- {item}")
+
+    print_section("Modified generated files", modified)
+    print_section("Deleted generated files", deleted)
+    print_section("Custom files", custom)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -119,6 +193,13 @@ def build_parser() -> argparse.ArgumentParser:
     list_cmd = subparsers.add_parser("list", help="List available templates.")
     list_cmd.add_argument("--templates-dir", default="templates", help="Templates directory path.")
 
+    status = subparsers.add_parser("status", help="Show generated/custom file status using manifest.")
+    status.add_argument(
+        "--project",
+        default=".",
+        help="Path to a scaffolded project directory (contains .scaffold/manifest.json).",
+    )
+
     return parser
 
 
@@ -152,14 +233,16 @@ def run_create(args: argparse.Namespace) -> None:
     }
 
     context.update(parse_vars(args.var))
-    scaffold_project(
+    generated_files = scaffold_project(
         templates_dir=templates_dir,
         template_name=args.template,
         destination=destination,
         context=context,
         overwrite=args.overwrite,
     )
+    write_manifest(destination=destination, template_name=args.template, files=generated_files)
     print(f"Project created at: {destination}")
+    print(f"Manifest written to: {destination / '.scaffold' / 'manifest.json'}")
 
 
 def run_list(args: argparse.Namespace) -> None:
@@ -186,6 +269,8 @@ def main() -> None:
         run_create(args)
     elif args.command == "list":
         run_list(args)
+    elif args.command == "status":
+        run_status(Path(args.project).resolve())
 
 
 if __name__ == "__main__":

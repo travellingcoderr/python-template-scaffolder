@@ -19,6 +19,7 @@ From this folder:
 ```bash
 python3 scaffold.py list
 python3 scaffold.py create --name "My Cool App" --author "Sathish" --email "sathish@example.com"
+python3 scaffold.py status --project /path/to/my-cool-app
 ```
 
 Output is created as `<output>/<project-slug>` (default output is current directory).
@@ -37,6 +38,23 @@ You can pass additional variables to templates:
 ```bash
 python3 scaffold.py create --name "Demo" --var service_port=8000 --var team_name="Platform"
 ```
+
+## Track Generated Vs Custom Files
+
+Every generated project now includes a manifest at `.scaffold/manifest.json` with all scaffolded files.
+
+Check status any time:
+
+```bash
+python3 scaffold.py status --project /absolute/path/to/project
+```
+
+It reports:
+
+- generated files unchanged from template
+- generated files modified by you
+- generated files deleted by you
+- custom files you added later
 
 ## Template options
 
