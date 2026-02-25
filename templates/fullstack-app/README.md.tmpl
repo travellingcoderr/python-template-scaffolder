@@ -1,0 +1,44 @@
+# {{ project_name }}
+
+{{ description }}
+
+## Project structure
+
+- `backend/`: Python FastAPI service
+- `frontend/`: Next.js app
+- `docker-compose.yml`: runs backend and frontend together
+
+## Environment setup
+
+```bash
+cp .env.example .env
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env.local
+```
+
+## Run with Docker
+
+```bash
+docker compose up --build
+```
+
+Frontend: `http://localhost:${FRONTEND_PORT:-3000}`  
+Backend docs: `http://localhost:${BACKEND_PORT:-8000}/docs`
+
+## Local development without Docker
+
+### Backend
+
+```bash
+cd backend
+uv sync --extra dev
+uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```

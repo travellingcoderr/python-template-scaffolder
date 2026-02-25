@@ -1,0 +1,15 @@
+.PHONY: setup lint test run
+
+setup:
+	python3 -m venv .venv
+	. .venv/bin/activate && pip install -U pip && pip install -e .[dev]
+
+lint:
+	ruff check .
+	mypy src
+
+test:
+	pytest
+
+run:
+	python -m {{ package_name }}.main

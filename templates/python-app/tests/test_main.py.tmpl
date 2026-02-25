@@ -1,0 +1,7 @@
+from {{ package_name }}.main import main
+
+
+def test_main_runs(capsys):
+    main()
+    captured = capsys.readouterr()
+    assert "{{ project_name }} is ready." in captured.out
