@@ -1,6 +1,6 @@
 # Backend
 
-Python FastAPI backend for `{{ project_name }}`.
+Python FastAPI backend for `AI Fullstack Starter`.
 
 ## Structure
 

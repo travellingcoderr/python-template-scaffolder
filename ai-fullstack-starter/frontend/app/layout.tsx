@@ -1,5 +1,5 @@
 export const metadata = {
-  title: 'Layered Stack App',
+  title: 'AI Fullstack Starter',
   description: 'Full-stack app with Python backend and Next.js frontend.',
 };
 

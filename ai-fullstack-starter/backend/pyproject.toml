@@ -3,9 +3,9 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "layered-stack-app-backend"
+name = "ai-fullstack-starter-backend"
 version = "0.1.0"
-description = "Backend API for Layered Stack App"
+description = "AI-ready backend API for AI Fullstack Starter"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

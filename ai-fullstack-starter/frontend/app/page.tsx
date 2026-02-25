@@ -26,7 +26,7 @@ export default function HomePage() {
 
   return (
     <main>
-      <h1>Layered Stack App</h1>
+      <h1>AI Fullstack Starter</h1>
       <p>Full-stack app with Python backend and Next.js frontend.</p>
       <p>
         Backend status: <strong>{health.status}</strong>

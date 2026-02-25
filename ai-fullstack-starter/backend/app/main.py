@@ -3,11 +3,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes.health import router as health_router
 from app.api.routes.jsonplaceholder import router as jsonplaceholder_router
+from app.api.routes.llm import router as llm_router
 from app.api.routes.search import router as search_router
 from app.core.config import settings
 from app.core.exception_handlers import register_exception_handlers
 
-app = FastAPI(title=settings.app_name)
+app = FastAPI(title="AI Fullstack Starter API")
 
 app.add_middleware(
     CORSMiddleware,
@@ -22,3 +23,4 @@ register_exception_handlers(app)
 app.include_router(health_router, prefix="/api", tags=["health"])
 app.include_router(search_router, prefix="/api/search", tags=["search"])
 app.include_router(jsonplaceholder_router, prefix="/api/jsonplaceholder", tags=["jsonplaceholder"])
+app.include_router(llm_router, prefix="/api/llm", tags=["llm"])

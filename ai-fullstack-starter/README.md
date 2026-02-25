@@ -1,4 +1,4 @@
-# Layered Stack App
+# AI Fullstack Starter
 
 Full-stack app with Python backend and Next.js frontend.
 
@@ -6,7 +6,7 @@ Full-stack app with Python backend and Next.js frontend.
 
 - `backend/`: Python FastAPI service
 - `frontend/`: Next.js app
-- `docker-compose.yml`: runs backend and frontend together
+- `docker-compose.yml`: runs backend, frontend, postgres, and redis together
 
 ## Environment setup
 
@@ -21,6 +21,11 @@ cp frontend/.env.example frontend/.env.local
 ```bash
 docker compose up --build
 ```
+
+Default infrastructure services:
+
+- Postgres: `localhost:5432` (`app`/`app`, db `chatdb`)
+- Redis: `localhost:6379`
 
 Frontend: `http://localhost:${FRONTEND_PORT:-3000}`  
 Backend docs: `http://localhost:${BACKEND_PORT:-8000}/docs`
